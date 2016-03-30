@@ -15,26 +15,19 @@ func main() {
 	agent.NewrelicLicense = "e1c2bcfa464edc57cb2791a11b440ee18b05a96b"
 	agent.NewrelicName = "kleach - simple server"
 	agent.CollectHTTPStat = true
-	agent.CollectHTTPErrors = true
 
-	agent.RegisterHTTPPath("foo")
 	http.HandleFunc("/foo", agent.WrapHTTPHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		agent.HTTPPathErrorCounters["foo"][200].Inc(1)
-		agent.HTTPErrorCounters[200].Inc(1)
+		w.WriteHeader(403)
 		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-	}))
-	agent.RegisterHTTPPath("bar")
+	}, "foo"))
 	http.HandleFunc("/bar", agent.WrapHTTPHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		agent.HTTPErrorCounters[201].Inc(1)
-		agent.HTTPPathErrorCounters["bar"][201].Inc(1)
+		w.WriteHeader(500)
 		fmt.Fprintf(w, "Goodbye, %q", html.EscapeString(r.URL.Path))
-	}))
-	agent.RegisterHTTPPath("index")
+	}, "bar"))
 	http.HandleFunc("/", agent.WrapHTTPHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		agent.HTTPErrorCounters[400].Inc(1)
-		agent.HTTPPathErrorCounters["index"][400].Inc(1)
+		w.WriteHeader(400)
 		fmt.Fprint(w, "Welcome!")
-	}))
+	}, "index"))
 	agent.Run()
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
